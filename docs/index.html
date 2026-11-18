@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redline Sec — SOC Command Center</title>
+<style>
+  :root {
+    --bg:#07070a; --panel:rgba(255,255,255,.035); --stroke:rgba(255,255,255,.08);
+    --red:#ff3b30; --orange:#ff9500; --green:#30d158; --blue:#0a84ff;
+    --txt:#f2f2f7; --muted:#8e8e9a;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--bg); color:var(--txt); min-height:100vh;
+    font:14px/1.55 -apple-system,"Segoe UI",Inter,Roboto,sans-serif;
+    background-image:
+      radial-gradient(900px 500px at 15% -10%, rgba(255,59,48,.14), transparent 60%),
+      radial-gradient(700px 400px at 95% 0%, rgba(191,90,242,.08), transparent 60%),
+      linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+    background-size:auto,auto,44px 44px,44px 44px;
+    padding:26px clamp(16px,4vw,44px);
+  }
+  header { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .shield { width:46px; height:46px; border-radius:14px; display:grid; place-items:center;
+            font-size:24px; background:linear-gradient(145deg,#ff4d43,#8f1710);
+            box-shadow:0 8px 26px rgba(255,59,48,.35); }
+  .logo h1 { font-size:19px; letter-spacing:.5px; font-weight:800; }
+  .logo h1 span { color:var(--red); }
+  .logo p { color:var(--muted); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; }
+  .header-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .pill { display:flex; align-items:center; gap:8px; background:var(--panel);
+          border:1px solid var(--stroke); border-radius:999px; padding:8px 14px;
+          font-size:12px; color:var(--muted); backdrop-filter:blur(10px); }
+  .dot-live { width:8px; height:8px; border-radius:50%; background:var(--green);
+              box-shadow:0 0 10px var(--green); animation:pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity:.25; } }
+  #clock { font-family:Consolas,monospace; color:var(--txt); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+          gap:14px; margin-bottom:20px; }
+  .kpi { background:var(--panel); border:1px solid var(--stroke); border-radius:16px;
+         padding:16px 18px; backdrop-filter:blur(12px); position:relative; overflow:hidden; }
+  .kpi::after { content:""; position:absolute; inset:auto 0 0 0; height:2px;
+                background:linear-gradient(90deg,transparent,rgba(255,59,48,.6),transparent); }
+  .kpi .v { font-size:26px; font-weight:800; letter-spacing:-.5px; }
+  .kpi .l { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.14em; }
+  .kpi.green .v { color:var(--green); } .kpi.red .v { color:var(--red); }
+  .kpi.orange .v { color:var(--orange); }
+  .note { background:var(--panel); border:1px solid var(--stroke); border-radius:14px;
+          padding:10px 16px; color:var(--muted); font-size:12px; margin-bottom:18px; }
+  h2 { font-size:14px; text-transform:uppercase; letter-spacing:.16em; color:var(--muted);
+       margin:26px 0 12px; display:flex; align-items:center; gap:10px; }
+  h2::after { content:""; flex:1; height:1px; background:var(--stroke); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--stroke); border-radius:16px;
+          padding:16px 18px; backdrop-filter:blur(12px); border-left:3px solid var(--muted);
+          transition:.2s; }
+  .card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.16); }
+  .card.up { border-left-color:var(--green); }
+  .card.down { border-left-color:var(--red); }
+  .card .top { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .status { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+  .status.up { background:var(--green); box-shadow:0 0 12px rgba(48,209,88,.7); }
+  .status.down { background:var(--red); box-shadow:0 0 12px rgba(255,59,48,.7);
+                 animation:pulse 1s infinite; }
+  .status.unknown { background:var(--muted); }
+  .card .name { font-weight:700; font-size:15px; }
+  .card .url { color:var(--blue); font-size:12px; word-break:break-all;
+               font-family:Consolas,monospace; opacity:.9; }
+  .chips { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .chip { background:rgba(255,255,255,.06); border:1px solid var(--stroke);
+          border-radius:7px; padding:3px 9px; font-size:11px; color:var(--muted);
+          font-family:Consolas,monospace; }
+  .chip.good { color:var(--green); border-color:rgba(48,209,88,.3); }
+  .chip.bad { color:var(--red); border-color:rgba(255,59,48,.35); }
+  .card .title-line { color:var(--muted); font-size:11.5px; margin-top:8px;
+                      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .feed-tools { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .fbtn { background:var(--panel); border:1px solid var(--stroke); color:var(--muted);
+          padding:6px 14px; border-radius:999px; font-size:12px; cursor:pointer; }
+  .fbtn.active { background:rgba(255,59,48,.16); border-color:rgba(255,59,48,.5);
+                 color:#fff; font-weight:600; }
+  .feed { background:rgba(255,255,255,.025); border:1px solid var(--stroke);
+          border-radius:16px; max-height:460px; overflow-y:auto; backdrop-filter:blur(12px); }
+  .ev { display:grid; grid-template-columns:86px 74px 1fr; gap:12px; padding:11px 16px;
+        border-bottom:1px solid rgba(255,255,255,.045); align-items:start;
+        animation:slidein .25s ease; }
+  @keyframes slidein { from { opacity:0; transform:translateY(-4px); } }
+  .ev:last-child { border-bottom:0; }
+  .ev .t { color:var(--muted); font-size:11px; font-family:Consolas,monospace; padding-top:2px; }
+  .badge { font-size:9.5px; font-weight:800; letter-spacing:.08em; padding:3px 8px;
+           border-radius:6px; text-align:center; }
+  .badge.critical { background:rgba(255,59,48,.18); color:#ff6b63;
+                    border:1px solid rgba(255,59,48,.4); }
+  .badge.warn { background:rgba(255,149,0,.15); color:var(--orange);
+                border:1px solid rgba(255,149,0,.35); }
+  .badge.info { background:rgba(255,255,255,.06); color:var(--muted);
+                border:1px solid var(--stroke); }
+  .ev .body { min-width:0; }
+  .ev .who { color:var(--blue); font-size:11.5px; font-weight:600; }
+  .ev .what { color:var(--txt); font-size:12.5px; font-family:Consolas,monospace;
+              word-break:break-word; }
+  .ev .kind { font-size:10px; text-transform:uppercase; letter-spacing:.12em;
+              color:var(--muted); margin-left:6px; }
+  .empty { color:var(--muted); padding:22px; text-align:center; font-size:12.5px; }
+  footer { margin-top:26px; color:var(--muted); font-size:11px; text-align:center;
+           letter-spacing:.08em; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="shield">🛡️</div>
+      <div>
+        <h1>REDLINE <span>SEC</span></h1>
+        <p>SOC Command Center — 24/7</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="pill"><span class="dot-live"></span>GITHUB ACTIONS</div>
+      <div class="pill"><span id="clock">--:--:--</span></div>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kpi-total">0</div><div class="l">Targets</div></div>
+    <div class="kpi green"><div class="v" id="kpi-up">0</div><div class="l">Online</div></div>
+    <div class="kpi red"><div class="v" id="kpi-down">0</div><div class="l">Down / Error</div></div>
+    <div class="kpi orange"><div class="v" id="kpi-crit">0</div><div class="l">Critical alerts</div></div>
+  </div>
+
+  <div class="note">⏱ Checks run every 5 minutes on GitHub's servers (PC-off safe).
+    Add or remove targets by editing <b>targets.json</b> in the repo.</div>
+
+  <h2>Monitored Targets</h2>
+  <div id="targets" class="grid"></div>
+
+  <h2>Threat Feed</h2>
+  <div class="feed-tools">
+    <button class="fbtn active" data-f="all" onclick="setFilter('all')">All</button>
+    <button class="fbtn" data-f="critical" onclick="setFilter('critical')">Critical</button>
+    <button class="fbtn" data-f="warn" onclick="setFilter('warn')">Warnings</button>
+    <button class="fbtn" data-f="info" onclick="setFilter('info')">Info</button>
+  </div>
+  <div id="feed" class="feed"><div class="empty">Waiting for the first workflow run…</div></div>
+
+  <footer>AUTHORIZED MONITORING ONLY · alerts → Discord #incident-reports</footer>
+
+<script>
+let FILTER = "all";
+let last = { targets: [], events: [] };
+
+function setFilter(f) {
+  FILTER = f;
+  document.querySelectorAll(".fbtn").forEach(b =>
+    b.classList.toggle("active", b.dataset.f === f));
+  render(last);
+}
+
+function tick() {
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString();
+}
+setInterval(tick, 1000); tick();
+
+function render(d) {
+  const total = d.targets.length;
+  const okT = t => t.last_status >= 200 && t.last_status < 400;
+  const up = d.targets.filter(okT).length;
+  const down = d.targets.filter(t => t.last_status !== null && t.last_status !== undefined
+                                     && !okT(t)).length;
+  const crit = d.events.filter(e => e.severity === "critical").length;
+  document.getElementById("kpi-total").textContent = total;
+  document.getElementById("kpi-up").textContent = up;
+  document.getElementById("kpi-down").textContent = down;
+  document.getElementById("kpi-crit").textContent = crit;
+
+  const tg = document.getElementById("targets");
+  tg.textContent = "";
+  if (!total) {
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "No state yet — run the workflow once (Actions → Run workflow).";
+    tg.appendChild(e);
+  }
+  for (const t of d.targets) {
+    const known = t.last_status !== null && t.last_status !== undefined;
+    const ok = known && okT(t);
+    const card = document.createElement("div");
+    card.className = "card " + (known ? (ok ? "up" : "down") : "");
+
+    const top = document.createElement("div"); top.className = "top";
+    const st = document.createElement("span");
+    st.className = "status " + (known ? (ok ? "up" : "down") : "unknown");
+    const nm = document.createElement("span"); nm.className = "name";
+    nm.textContent = t.name;
+    top.append(st, nm);
+
+    const url = document.createElement("div"); url.className = "url";
+    url.textContent = t.url || "";
+
+    const chips = document.createElement("div"); chips.className = "chips";
+    const cHttp = document.createElement("span");
+    cHttp.className = "chip " + (known ? (ok ? "good" : "bad") : "");
+    cHttp.textContent = !known ? "PENDING" :
+                        t.last_status === 0 ? "UNREACHABLE" : "HTTP " + t.last_status;
+    const cTs = document.createElement("span"); cTs.className = "chip";
+    cTs.textContent = (t.ts || "").slice(11, 16) + "Z";
+    chips.append(cHttp, cTs);
+
+    const tl = document.createElement("div"); tl.className = "title-line";
+    tl.textContent = t.title ? "📄 " + t.title : "";
+
+    card.append(top, url, chips, tl);
+    tg.appendChild(card);
+  }
+
+  const feed = document.getElementById("feed");
+  feed.textContent = "";
+  const evs = d.events.filter(e => FILTER === "all" || e.severity === FILTER);
+  if (!evs.length) {
+    const e = document.createElement("div");
+    e.className = "empty"; e.textContent = "No events match this filter yet.";
+    feed.appendChild(e);
+  }
+  for (const ev of evs) {
+    const row = document.createElement("div"); row.className = "ev";
+    const t = document.createElement("span"); t.className = "t";
+    t.textContent = (ev.ts || "").slice(11, 19) + "Z";
+    const b = document.createElement("span");
+    b.className = "badge " + ev.severity; b.textContent = ev.severity.toUpperCase();
+    const body = document.createElement("div"); body.className = "body";
+    const who = document.createElement("div"); who.className = "who";
+    who.textContent = ev.target || "system";
+    const kd = document.createElement("span"); kd.className = "kind";
+    kd.textContent = (ev.kind || "").replaceAll("-", " ");
+    who.appendChild(kd);
+    const what = document.createElement("div"); what.className = "what";
+    what.textContent = ev.detail;
+    body.append(who, what);
+    row.append(t, b, body);
+    feed.appendChild(row);
+  }
+}
+
+async function poll() {
+  try {
+    const [s, e] = await Promise.all([
+      fetch("state.json", { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+      fetch("events.json", { cache: "no-store" }).then(r => r.json()).catch(() => [])
+    ]);
+    const targets = Object.values(s || {}).map(x => ({
+      name: x.name, url: x.url, last_status: x.last_status,
+      latency: x.latency, title: x.title, ts: x.ts
+    }));
+    last = { targets, events: Array.isArray(e) ? e : [] };
+    render(last);
+  } catch (err) { /* repo not deployed yet */ }
+}
+poll();
+setInterval(poll, 60000);
+</script>
+</body>
+</html>

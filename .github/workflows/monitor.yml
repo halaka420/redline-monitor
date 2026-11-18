@@ -1,0 +1,36 @@
+name: Redline Monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes, 24/7 — PC can be off
+  workflow_dispatch:        # manual "Run workflow" button
+
+permissions:
+  contents: write
+
+concurrency:
+  group: redline-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run monitor sweep
+        env:
+          DISCORD_ALERT_WEBHOOK: ${{ secrets.DISCORD_ALERT_WEBHOOK }}
+        run: python monitor.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "redline-monitor"
+          git config user.email "actions@users.noreply.github.com"
+          git add state.json docs/events.json
+          git commit -m "[bot] monitor update $(date -u +%FT%TZ)" || echo "no changes"
+          git push
