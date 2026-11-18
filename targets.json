@@ -2,9 +2,5 @@
   {
     "name": "Mabato Bank SIM",
     "url": "https://your-sim-site.example.com"
-  },
-  {
-    "name": "TryHackMe",
-    "url": "https://tryhackme.com"
   }
 ]
