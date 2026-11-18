@@ -1,5 +1,12 @@
 [
   {
+    "ts": "2026-11-18T12:20:34+00:00",
+    "target": "TryHackMe",
+    "kind": "content-changed",
+    "severity": "warn",
+    "detail": "TryHackMe: content changed (79b08f27→542520e7). Title: Learn Cyber Security | TryHackMe Cyber Training — legit deploy or tampering?"
+  },
+  {
     "ts": "2026-11-18T12:08:59+00:00",
     "target": "TryHackMe",
     "kind": "monitor-online",

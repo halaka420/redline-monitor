@@ -2,7 +2,7 @@
   "Mabato Bank SIM": {
     "name": "Mabato Bank SIM",
     "url": "https://your-sim-site.example.com",
-    "ts": "2026-11-18T12:08:59+00:00",
+    "ts": "2026-11-18T12:20:34+00:00",
     "last_status": 0,
     "latency": null,
     "title": null,
@@ -11,10 +11,10 @@
   "TryHackMe": {
     "name": "TryHackMe",
     "url": "https://tryhackme.com",
-    "ts": "2026-11-18T12:09:01+00:00",
+    "ts": "2026-11-18T12:20:35+00:00",
     "last_status": 200,
     "latency": null,
     "title": "Learn Cyber Security | TryHackMe Cyber Training",
-    "last_hash": "79b08f27d2d2e7ac"
+    "last_hash": "542520e7ed44c171"
   }
 }
