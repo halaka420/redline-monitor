@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 TARGETS_FILE = os.path.join(BASE, "targets.json")
-STATE_FILE = os.path.join(BASE, "state.json")
+STATE_FILE = os.path.join(BASE, "docs", "state.json")
 EVENTS_FILE = os.path.join(BASE, "docs", "events.json")
 WEBHOOK = os.environ.get("DISCORD_ALERT_WEBHOOK", "").strip()
 
